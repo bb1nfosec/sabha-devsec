@@ -66,7 +66,7 @@ SABHA-DevSec is a **100% client-side** security analysis platform that transform
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/sabha-devsec.git
+git clone https://github.com/bb1nfosec/sabha-devsec.git
 cd sabha-devsec
 
 # Start a local web server (choose one)
@@ -289,8 +289,9 @@ Built with:
 
 ## 📧 Support
 
-- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/sabha-devsec/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/YOUR_USERNAME/sabha-devsec/discussions)
+- **Issues**: [GitHub Issues](https://github.com/bb1nfosec/sabha-devsec/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/bb1nfosec/sabha-devsec/discussions)
+- **Security**: See [SECURITY.md](SECURITY.md) for reporting vulnerabilities
 
 ---
 
