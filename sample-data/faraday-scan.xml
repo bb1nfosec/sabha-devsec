@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<faraday>
+  <host ip="192.168.1.100" name="web-server-01">
+    <vulnerability>
+      <name>SQL Injection in Login Form</name>
+      <desc>The login form is vulnerable to SQL injection attacks. An attacker can bypass authentication by injecting SQL commands through the username parameter.</desc>
+      <severity>critical</severity>
+      <refs>CVE-2024-45678, OWASP A03:2021</refs>
+      <resolution>Implement parameterized queries and input validation</resolution>
+    </vulnerability>
+    <vulnerability>
+      <name>Cross-Site Scripting (XSS) in Search Function</name>
+      <desc>Reflected XSS vulnerability in the search functionality allows attackers to execute arbitrary JavaScript in victim browsers.</desc>
+      <severity>high</severity>
+      <refs>CVE-2024-45679, OWASP A07:2021</refs>
+    </vulnerability>
+    <service name="https" port="443" protocol="tcp">
+      <vulnerability>
+        <name>Weak TLS Configuration</name>
+        <desc>Server supports TLS 1.0 and TLS 1.1 which are deprecated and vulnerable to cryptographic attacks.</desc>
+        <severity>medium</severity>
+      </vulnerability>
+    </service>
+  </host>
+  <host ip="192.168.1.101" name="api-server-01">
+    <vulnerability>
+      <name>Broken Authentication - Missing JWT Validation</name>
+      <desc>API endpoints do not properly validate JWT tokens, allowing attackers to forge authentication tokens.</desc>
+      <severity>critical</severity>
+      <refs>CVE-2024-45680, OWASP A07:2021</refs>
+    </vulnerability>
+    <vulnerability>
+      <name>API Rate Limiting Not Implemented</name>
+      <desc>Critical API endpoints lack rate limiting, exposing the service to denial of service attacks.</desc>
+      <severity>high</severity>
+    </vulnerability>
+  </host>
+</faraday>

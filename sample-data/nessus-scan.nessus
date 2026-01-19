@@ -1,0 +1,42 @@
+<?xml version="1.0" ?>
+<NessusClientData_v2>
+  <Report name="Internal Network Scan" xmlns:cm="http://www.nessus.org/cm">
+    <ReportHost name="10.0.1.50">
+      <ReportItem port="22" svc_name="ssh" protocol="tcp" severity="3" pluginID="12345" pluginName="SSL/TLS: Report Weak Cipher Suites" pluginFamily="General">
+        <risk_factor>High</risk_factor>
+        <synopsis>The remote service supports weak SSL/TLS cipher suites.</synopsis>
+        <description>The remote host supports SSL/TLS cipher suites that are considered weak and should be disabled.</description>
+        <solution>Disable support for weak cipher suites.</solution>
+        <cve>CVE-2016-2183</cve>
+        <cvss_base_score>7.5</cvss_base_score>
+        <cvss3_base_score>7.5</cvss3_base_score>
+      </ReportItem>
+      <ReportItem port="443" svc_name="https" protocol="tcp" severity="4" pluginID="12346" pluginName="Apache HTTP Server Multiple Vulnerabilities" pluginFamily="Web Servers">
+        <risk_factor>Critical</risk_factor>
+        <synopsis>The remote web server is affected by multiple vulnerabilities.</synopsis>
+        <description>The version of Apache HTTP Server running on the remote host is affected by multiple vulnerabilities including remote code execution.</description>
+        <solution>Upgrade to Apache HTTP Server 2.4.54 or later.</solution>
+        <cve>CVE-2024-23456</cve>
+        <cvss_base_score>9.8</cvss_base_score>
+        <cvss3_base_score>9.8</cvss3_base_score>
+      </ReportItem>
+      <ReportItem port="3306" svc_name="mysql" protocol="tcp" severity="2" pluginID="12347" pluginName="MySQL Unencrypted Client/Server Communication" pluginFamily="Databases">
+        <risk_factor>Medium</risk_factor>
+        <synopsis>The remote database server allows unencrypted client connections.</synopsis>
+        <description>The MySQL server is configured to accept unencrypted connections, which could allow attackers to intercept database credentials and data.</description>
+        <solution>Configure MySQL to require SSL/TLS for all connections.</solution>
+        <cvss_base_score>5.9</cvss_base_score>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="10.0.1.51">
+      <ReportItem port="445" svc_name="microsoft-ds" protocol="tcp" severity="4" pluginID="12348" pluginName="SMB Signing Not Required" pluginFamily="Windows">
+        <risk_factor>Critical</risk_factor>
+        <synopsis>SMB signing is not required on the remote host.</synopsis>
+        <description>The remote Windows host does not require SMB signing, making it vulnerable to man-in-the-middle attacks.</description>
+        <solution>Enable required SMB signing through Group Policy.</solution>
+        <cve>CVE-2023-12345</cve>
+        <cvss_base_score>9.1</cvss_base_score>
+      </ReportItem>
+    </ReportHost>
+  </Report>
+</NessusClientData_v2>
