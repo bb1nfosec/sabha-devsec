@@ -40,6 +40,26 @@ SABHA-DevSec is a **100% client-side** security analysis platform that transform
 
 ---
 
+## 📸 Screenshots
+
+### Dashboard - Security Posture Overview
+![Dashboard](screenshots/dashboard.png)
+*Real-time security metrics with critical findings, debt score, and financial exposure*
+
+### Executive Summary - Board-Ready Report
+![Executive Summary](screenshots/executive-summary.png)
+*CFO-level analysis with strategic decision options and ROI calculations*
+
+### Detailed Findings - Complete Vulnerability List
+![Findings](screenshots/findings.png)
+*Granular view of all security findings with severity badges and financial impact*
+
+### Upload Interface - Multi-Tool Support
+![Upload Zone](screenshots/upload.png)
+*Drag-and-drop support for JSON, CSV, XML from 13+ security tools*
+
+---
+
 ## 🚀 Quick Start
 
 ### **1. Local Installation (No Dependencies)**
