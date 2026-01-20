@@ -1,4 +1,4 @@
-# Node modules
+# Dependencies
 node_modules/
 npm-debug.log*
 yarn-debug.log*
@@ -7,57 +7,32 @@ yarn-error.log*
 # Build outputs
 dist/
 build/
-*.min.js
-*.min.css
+*.log
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*.swn
-.DS_Store
+*~
 
 # OS
+.DS_Store
 Thumbs.db
-desktop.ini
-
-# Logs
-logs/
-*.log
 
 # Temporary files
 *.tmp
-*.temp
-.cache/
+*.bak
+ui-views-insert.js
+ui-views-temp.txt
 
-# Environment variables
+# Environment
 .env
 .env.local
-.env.*.local
 
-# Test coverage
+# Testing
 coverage/
 .nyc_output/
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-venv/
-ENV/
-
-# Secrets (never commit)
-**/secrets.json
-**/*-secrets.json
-**/config/production.json
-
-# User uploads (if you add server-side)
-uploads/
-user-data/
-
-# Backup files
-*.bak
-*.backup
+# Production
+*.production.js

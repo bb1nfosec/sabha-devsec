@@ -1,0 +1,40 @@
+{
+  "name": "sabha-devsec-cli",
+  "version": "2.0.0",
+  "description": "Advanced Cyber Risk Intelligence Platform - CLI Tool for DevSecOps",
+  "main": "cli.js",
+  "bin": {
+    "sabha": "./cli.js"
+  },
+  "scripts": {
+    "start": "node cli.js",
+    "test": "echo \"Run: sabha help\" && exit 0"
+  },
+  "keywords": [
+    "security",
+    "vulnerability",
+    "devsecops",
+    "threat-intelligence",
+    "ml",
+    "compliance",
+    "sast",
+    "dast",
+    "sca"
+  ],
+  "author": "Sabha Security Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bb1nfosec/sabha-devsec"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ]
+}

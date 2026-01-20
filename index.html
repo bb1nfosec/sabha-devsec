@@ -1,13 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SABHA-DevSec | Strategic Cyber Risk Intelligence</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>SABHA-DevSec | Advanced Cyber Risk Intelligence Platform</title>
+
+    <!-- Enhanced Styles -->
+    <link rel="stylesheet" href="styles-enhanced.css">
+
+    <!-- Fonts -->
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap"
         rel="stylesheet">
 </head>
 
@@ -17,12 +21,26 @@
     <!-- Core React Libraries -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/recharts@2.5.0/dist/Recharts.js"></script>
+    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+
+    <!-- Charting Libraries -->
+    <script src="https://unpkg.com/recharts@2.5.0/umd/Recharts.js"></script>
+
+    <!-- Data Processing -->
     <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
 
-    <!-- SABHA Modules -->
+    <!-- SABHA Enhanced Modules -->
+    <script src="threat-intel.js"></script>
+    <script src="ml-engine.js"></script>
+    <script src="compliance-engine.js"></script>
+    <script src="security-module.js"></script>
     <script src="notifications.js"></script>
     <script src="storage.js"></script>
+
+    <!-- 3D Visualization Libraries -->
+    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+    <script src="viz-3d.js"></script>
 
     <!-- Application Code -->
     <script src="app-nojs.js" defer></script>

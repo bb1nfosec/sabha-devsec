@@ -530,36 +530,102 @@ class SABHAAnalysisEngine {
 
     static generateExecutiveSummary(analysis) {
         const criticalCount = analysis.findings.filter(f => f.severity === 'critical').length;
+        const highCount = analysis.findings.filter(f => f.severity === 'high').length;
         const topRisk = analysis.riskDomains[0];
 
+        // Threat Intelligence Metrics
+        const threatIntel = analysis.threatIntelligence || {};
+        const kevCount = threatIntel.inKEV || 0;
+        const highEPSS = threatIntel.highEPSS || 0;
+        const cveEnriched = threatIntel.totalEnriched || 0;
+
+        // ML Analytics Metrics
+        const attackGraph = analysis.attackGraph || {};
+        const criticalPaths = attackGraph.criticalPaths || [];
+        const avgMLRisk = analysis.findings.reduce((sum, f) => sum + (f.mlRiskScore || 0), 0) / analysis.findings.length || 0;
+
+        // Compliance Metrics
+        const complianceReport = analysis.complianceReport || {};
+        const complianceStatus = complianceReport.overallStatus || 'unknown';
+        const totalGaps = (analysis.complianceGaps || []).length;
+        const criticalGaps = (analysis.complianceGaps || []).filter(g => g.severity === 'critical').length;
+
         return {
-            currentPosture: `While management may believe the organization maintains acceptable security posture, operational evidence reveals ${criticalCount} critical control gaps requiring immediate attention. Current architecture presents exploitable vulnerabilities with mean time to exploit of 48-120 hours for high-severity findings.`,
-            principalRisk: topRisk ? `The ${topRisk.domain} domain contains ${topRisk.critical + topRisk.high} high-impact vulnerabilities with combined financial exposure of ${topRisk.exposure}. Exploitation would trigger regulatory notification requirements and estimated remediation costs significantly exceeding preventive measures. Time-to-exploit analysis indicates active threat materialization within 48-72 hours of discovery by sophisticated actors.` : 'Insufficient data for risk assessment.',
+            currentPosture: `Comprehensive security analysis reveals ${criticalCount} critical and ${highCount} high-severity vulnerabilities across ${analysis.riskDomains.length} security domains. Advanced threat intelligence indicates ${kevCount} findings are actively exploited in the wild (CISA KEV), with ${highEPSS} vulnerabilities showing >10% exploitation probability (EPSS). ML-powered risk analysis identified ${criticalPaths.length} critical attack paths enabling full system compromise. Current compliance status: ${complianceStatus.replace('-', ' ').toUpperCase()} with ${criticalGaps} critical framework gaps requiring immediate board attention.`,
+
+            principalRisk: topRisk ? `Primary risk concentration in ${topRisk.domain} domain with ${topRisk.critical} critical vulnerabilities presenting ${topRisk.exposure} financial exposure. Attack path analysis reveals sophisticated adversaries can achieve initial access through ${criticalPaths.length > 0 ? criticalPaths[0].entryPoint : 'multiple vectors'} and escalate to ${criticalPaths.length > 0 ? criticalPaths[0].target : 'administrative control'} in ${criticalPaths.length > 0 ? criticalPaths[0].length : '3-5'} steps. Mean time to exploit: 48-72 hours for APT-level actors. Regulatory implications include mandatory breach notification (GDPR/CCPA), potential fines of $${topRisk.impactRange.high}M+, and significant reputational damage. ${kevCount > 0 ? 'CRITICAL: ' + kevCount + ' vulnerabilities are confirmed as actively exploited by threat actors in real-world attacks.' : ''}` : 'Insufficient data for comprehensive risk assessment.',
+
+            threatIntelligence: {
+                summary: `Threat landscape analysis (${cveEnriched} CVEs enriched): ${kevCount} known-exploited vulnerabilities, ${highEPSS} high-probability targets, ${threatIntel.mitreTopTactics?.length || 0} MITRE ATT&CK tactics mapped. Immediate threat: ${kevCount > 0 ? 'ELEVATED - Active exploitation confirmed' : 'MODERATE - No confirmed active exploitation'}.`,
+                findings: [
+                    `${kevCount} vulnerabilities in CISA Known Exploited Vulnerabilities catalog`,
+                    `${highEPSS} vulnerabilities with EPSS score >10% (active scanning detected)`,
+                    `${cveEnriched} findings enriched with real-time CVE/NVD intelligence`,
+                    `Attack techniques mapped to ${threatIntel.mitreTopTactics?.length || 0} MITRE ATT&CK tactics`
+                ]
+            },
+
+            mlAnalytics: {
+                summary: `ML-powered analysis (${analysis.findings.length} findings evaluated): Average risk score ${Math.round(avgMLRisk)}/1000. Attack graph contains ${attackGraph.nodes?.length || 0} vulnerability nodes, ${attackGraph.edges?.length || 0} potential exploitation chains, ${criticalPaths.length} critical paths to full compromise. Remediation ROI analysis prioritizes ${(analysis.remediationPlan || []).length} fixes for maximum risk reduction per engineering hour.`,
+                findings: [
+                    `${criticalPaths.length} critical attack paths enabling complete system compromise`,
+                    `Average ML risk score: ${Math.round(avgMLRisk)}/1000 (${avgMLRisk > 700 ? 'CRITICAL' : avgMLRisk > 500 ? 'HIGH' : 'MODERATE'})`,
+                    `${attackGraph.nodes?.length || 0} vulnerability nodes in attack surface`,
+                    `Remediation effort: ${(analysis.remediationPlan || []).slice(0, 10).reduce((sum, f) => sum + (parseInt(f.remediationEffort) || 0), 0)} person-hours for top 10 priorities`
+                ]
+            },
+
+            complianceStatus: {
+                summary: `Compliance framework analysis: ${complianceStatus.toUpperCase().replace('-', ' ')} across ${complianceReport.frameworks?.length || 0} frameworks (SOC 2, ISO 27001, GDPR, HIPAA, PCI-DSS). Total gaps: ${totalGaps} (${criticalGaps} critical). ${criticalGaps > 0 ? 'URGENT: Critical compliance gaps create audit failure risk and regulatory exposure.' : 'No critical compliance gaps identified.'}`,
+                frameworks: complianceReport.frameworks || [],
+                criticalGaps: criticalGaps,
+                findings: [
+                    `${criticalGaps} critical compliance control gaps requiring immediate remediation`,
+                    `${totalGaps} total framework gaps identified across ${complianceReport.frameworks?.length || 0} standards`,
+                    `Estimated audit readiness: ${criticalGaps === 0 ? '90-95%' : criticalGaps < 5 ? '60-75%' : '30-50%'}`,
+                    `SLA breach risk: ${criticalGaps > 0 ? 'HIGH (48-hour remediation required)' : 'LOW'}`
+                ]
+            },
+
             options: [
                 {
                     id: 'A',
                     recommended: true,
-                    title: 'Immediate Risk Remediation (Recommended)',
-                    description: `Address all ${criticalCount} critical findings within 30-day sprint. Estimated cost: $${Math.round(criticalCount * 15)}K engineering time. Risk reduction: 85-95%. ROI: 15x-40x based on prevented incident costs.`,
-                    cost: Math.round(criticalCount * 15),
-                    riskReduction: 90
+                    title: 'Immediate Strategic Remediation (Board Recommended)',
+                    description: `Comprehensive 30-day security sprint addressing ${criticalCount} critical findings, ${kevCount} actively-exploited vulnerabilities, and ${criticalGaps} compliance gaps. Estimated investment: $${Math.round(criticalCount * 18 + criticalGaps * 12)}K (engineering + compliance). Expected outcomes: 90-95% risk reduction, elimination of critical attack paths, restoration of compliance status, removal from threat actor target lists. ROI: 20x-50x based on prevented breach costs ($${topRisk ? topRisk.impactRange.high : 50}M+ exposure). ${kevCount > 0 ? 'CRITICAL URGENCY: Active exploitation detected - immediate action required to prevent weaponization.' : ''}`,
+                    cost: Math.round(criticalCount * 18 + criticalGaps * 12),
+                    riskReduction: 92,
+                    timeline: '30 days',
+                    impact: 'Eliminates 90%+ of attack surface, achieves compliance, prevents regulatory fines'
                 },
                 {
                     id: 'B',
                     recommended: false,
-                    title: 'Incremental Remediation',
-                    description: `Phased approach over 6 months. Estimated cost: $${Math.round(criticalCount * 8)}K. Risk reduction: 45-60%. Residual exposure: $${topRisk ? topRisk.impactRange.low : 10}M-$${topRisk ? topRisk.impactRange.high : 40}M.`,
-                    cost: Math.round(criticalCount * 8),
-                    riskReduction: 50
+                    title: 'Phased Risk Reduction Program',
+                    description: `6-month incremental approach prioritizing ${Math.min(criticalCount, 10)} highest-ROI fixes identified by ML analysis. Investment: $${Math.round(criticalCount * 10)}K spread across two quarters. Risk reduction: 60-70%. Residual exposure: $${topRisk ? Math.round(topRisk.impactRange.low * 0.3) : 15}M-$${topRisk ? Math.round(topRisk.impactRange.high * 0.4) : 40}M. ${kevCount > 0 ? 'WARNING: Delayed remediation of ' + kevCount + ' KEV vulnerabilities increases breach probability to 40-60% within 6 months.' : 'Compliance gaps persist, audit failure risk remains elevated.'}`,
+                    cost: Math.round(criticalCount * 10),
+                    riskReduction: 65,
+                    timeline: '6 months',
+                    impact: 'Partial risk reduction, ongoing compliance exposure, extended vulnerability window'
                 },
                 {
                     id: 'C',
                     recommended: false,
                     title: 'Risk Acceptance with Enhanced Monitoring',
-                    description: 'Document risk acceptance, increase cybersecurity insurance. Premium increase: $2M-$5M annually. Coverage gap exposure remains significant.',
-                    cost: 3500,
-                    riskReduction: 10
+                    description: `Document formal risk acceptance for board records, increase cyber insurance limits by $${topRisk ? topRisk.impactRange.high : 50}M, deploy enhanced threat detection (SIEM/EDR). Annual premium increase: $${Math.round(criticalCount * 0.5 + 2)}M-$${Math.round(criticalCount * 0.8 + 5)}M. Coverage gaps: first-party losses, reputational damage, regulatory fines typically excluded. Risk reduction: 10-15% (detection only, not prevention). ${kevCount > 0 ? 'CRITICAL RISK: Accepting ' + kevCount + ' actively-exploited vulnerabilities violates fiduciary duties and creates D&O liability.' : ''} Board liability exposure signific ant in event of breach. Not recommended for organizations handling regulated data (HIPAA/PCI-DSS).`,
+                    cost: Math.round(criticalCount * 0.65 + 3.5) * 1000,
+                    riskReduction: 12,
+                    timeline: 'Ongoing',
+                    impact: 'No actual risk reduction, insurance coverage gaps, potential regulatory non-compliance'
                 }
+            ],
+
+            boardRecommendations: [
+                `${criticalCount > 0 ? '🚨 IMMEDIATE ACTION REQUIRED: Authorize emergency security sprint to address ' + criticalCount + ' critical vulnerabilities within 30 days' : '✅ Maintain current security investment levels'}`,
+                `${kevCount > 0 ? '⚠️ THREAT ALERT: ' + kevCount + ' vulnerabilities under active exploitation - assign executive incident response owner' : '📊 Continue quarterly security posture reviews'}`,
+                `${criticalGaps > 0 ? '📋 COMPLIANCE ESCALATION: ' + criticalGaps + ' critical framework gaps create audit failure risk - engage compliance counsel' : '✅ Current compliance posture acceptable'}`,
+                `💰 Approve $${Math.round(criticalCount * 18 + criticalGaps * 12)}K security budget (Option A) vs potential $${topRisk ? topRisk.impactRange.high : 50}M+ breach exposure (50x ROI)`,
+                `🔍 Request monthly executive briefings on ML-identified critical attack paths and threat intelligence updates`
             ]
         };
     }
@@ -613,7 +679,100 @@ class SABHAAnalysisEngine {
 
         analysis.executiveSummary = this.generateExecutiveSummary(analysis);
 
+        // ========================================================================
+        // ENHANCED: Integrate Threat Intelligence, ML Engine, and Compliance
+        // ========================================================================
+
+        // 1. Threat Intelligence Enrichment
+        if (typeof ThreatIntelligenceEngine !== 'undefined') {
+            const threatIntel = new ThreatIntelligenceEngine();
+
+            // Enrich findings with threat intelligence
+            analysis.findings = analysis.findings.map(finding => {
+                const enriched = { ...finding };
+
+                // Add CVE data if available
+                if (finding.cveId) {
+                    const cveData = threatIntel.getCVEData(finding.cveId);
+                    enriched.cve = cveData;
+                    enriched.epssScore = threatIntel.getEPSSScore(finding.cveId)?.epss || null;
+                    enriched.inKEV = threatIntel.isInCISAKEV(finding.cveId);
+                }
+
+                // Add MITRE ATT&CK mapping
+                enriched.mitreAttack = threatIntel.mapToMitreAttack(finding);
+
+                // Calculate threat score
+                enriched.threatScore = threatIntel.calculateThreatScore(finding);
+
+                return enriched;
+            });
+
+            // Store threat intelligence summary
+            analysis.threatIntelligence = {
+                totalEnriched: analysis.findings.filter(f => f.cve).length,
+                inKEV: analysis.findings.filter(f => f.inKEV).length,
+                highEPSS: analysis.findings.filter(f => f.epssScore && parseFloat(f.epssScore) > 0.1).length,
+                mitreTopTactics: this.getTopMitreTactics(analysis.findings)
+            };
+        }
+
+        // 2. ML-Based Risk Scoring and Attack Path Analysis
+        if (typeof MLEngine !== 'undefined') {
+            const mlEngine = new MLEngine();
+
+            // Calculate advanced risk scores
+            analysis.findings = analysis.findings.map(finding => ({
+                ...finding,
+                mlRiskScore: mlEngine.calculateAdvancedRiskScore(finding)
+            }));
+
+            // Generate attack graph
+            analysis.attackGraph = mlEngine.generateAttackGraph(analysis.findings);
+
+            // Prioritize remediation with ROI
+            analysis.remediationPlan = mlEngine.prioritizeRemediation(analysis.findings).slice(0, 20);
+
+            // Generate AI-powered suggestions for top findings
+            analysis.findings = analysis.findings.map(finding => ({
+                ...finding,
+                aiSuggestions: mlEngine.generateRemediationSuggestions(finding)
+            }));
+        }
+
+        // 3. Compliance Framework Mapping
+        if (typeof ComplianceEngine !== 'undefined') {
+            const complianceEngine = new ComplianceEngine();
+
+            // Map findings to compliance frameworks
+            analysis.complianceMappings = complianceEngine.mapFindingsToFrameworks(analysis.findings);
+
+            // Generate gap analysis
+            analysis.complianceGaps = complianceEngine.generateGapAnalysis(analysis.complianceMappings);
+
+            // Generate compliance report
+            analysis.complianceReport = complianceEngine.generateComplianceReport(
+                analysis.complianceMappings,
+                analysis.complianceGaps
+            );
+        }
+
         return analysis;
+    }
+
+    static getTopMitreTactics(findings) {
+        const tactics = {};
+        findings.forEach(f => {
+            if (f.mitreAttack && f.mitreAttack.tactics) {
+                f.mitreAttack.tactics.forEach(tactic => {
+                    tactics[tactic] = (tactics[tactic] || 0) + 1;
+                });
+            }
+        });
+        return Object.entries(tactics)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5)
+            .map(([tactic, count]) => ({ tactic, count }));
     }
 }
 
@@ -699,6 +858,24 @@ function App() {
                         className: `nav-link ${view === 'upload' ? 'active' : ''}`,
                         onClick: () => setView('upload')
                     }, '📁 Upload Data')
+                ),
+                h('li', null,
+                    h('a', {
+                        className: `nav-link ${view === 'threat-intel' ? 'active' : ''}`,
+                        onClick: () => setView('threat-intel')
+                    }, '🎯 Threat Intel')
+                ),
+                h('li', null,
+                    h('a', {
+                        className: `nav-link ${view === 'ml-analytics' ? 'active' : ''}`,
+                        onClick: () => setView('ml-analytics')
+                    }, '🤖 ML Analytics')
+                ),
+                h('li', null,
+                    h('a', {
+                        className: `nav-link ${view === 'compliance' ? 'active' : ''}`,
+                        onClick: () => setView('compliance')
+                    }, '📋 Compliance')
                 ),
                 h('li', null,
                     h('a', {
@@ -790,24 +967,312 @@ function App() {
                 )
             ),
             view === 'executive' && analysis && h('div', { className: 'executive-summary' },
-                h('h2', null, 'Cyber Risk Posture Assessment – Executive Summary'),
-                h('p', { style: { fontSize: '14px', color: 'var(--slate-gray)' } }, `Generated: ${new Date().toLocaleDateString()}`),
+                h('h2', { style: { marginBottom: '0.5rem' } }, 'Cyber Risk Posture Assessment – Executive Summary'),
+                h('p', { style: { fontSize: '14px', color: 'var(--slate-gray)', marginBottom: '2rem' } }, `Generated: ${new Date().toLocaleDateString()}`),
+
                 h('h3', null, 'I. CURRENT POSTURE'),
                 h('p', null, analysis.executiveSummary.currentPosture),
-                h('h3', null, 'II. PRINCIPAL RISK TO ENTERPRISE VALUE'),
+
+                h('h3', { style: { marginTop: '2rem' } }, 'II. PRINCIPAL RISK TO ENTERPRISE VALUE'),
                 h('p', null, analysis.executiveSummary.principalRisk),
-                h('h3', null, 'III. STRATEGIC DECISION REQUIRED'),
+
+                // NEW: Threat Intelligence Section
+                analysis.executiveSummary.threatIntelligence && h('div', { style: { marginTop: '2.5rem' } },
+                    h('h3', null, 'III. THREAT INTELLIGENCE LANDSCAPE'),
+                    h('p', { style: { marginBottom: '1rem' } }, analysis.executiveSummary.threatIntelligence.summary),
+                    h('ul', { style: { marginLeft: '1.5rem', lineHeight: '1.8' } },
+                        ...analysis.executiveSummary.threatIntelligence.findings.map((finding, idx) =>
+                            h('li', { key: idx }, finding)
+                        )
+                    )
+                ),
+
+                // NEW: ML Analytics Section
+                analysis.executiveSummary.mlAnalytics && h('div', { style: { marginTop: '2.5rem' } },
+                    h('h3', null, 'IV. ML-POWERED RISK ANALYSIS'),
+                    h('p', { style: { marginBottom: '1rem' } }, analysis.executiveSummary.mlAnalytics.summary),
+                    h('ul', { style: { marginLeft: '1.5rem', lineHeight: '1.8' } },
+                        ...analysis.executiveSummary.mlAnalytics.findings.map((finding, idx) =>
+                            h('li', { key: idx }, finding)
+                        )
+                    )
+                ),
+
+                // NEW: Compliance Section
+                analysis.executiveSummary.complianceStatus && h('div', { style: { marginTop: '2.5rem' } },
+                    h('h3', null, 'V. COMPLIANCE FRAMEWORK STATUS'),
+                    h('p', { style: { marginBottom: '1rem' } }, analysis.executiveSummary.complianceStatus.summary),
+                    h('ul', { style: { marginLeft: '1.5rem', lineHeight: '1.8' } },
+                        ...analysis.executiveSummary.complianceStatus.findings.map((finding, idx) =>
+                            h('li', { key: idx }, finding)
+                        )
+                    )
+                ),
+
+                h('h3', { style: { marginTop: '2.5rem' } }, 'VI. STRATEGIC DECISION REQUIRED'),
                 ...analysis.executiveSummary.options.map(option =>
                     h('div', {
                         key: option.id,
                         className: `decision-option ${option.recommended ? 'recommended' : ''}`,
-                        style: { padding: '1rem', margin: '1rem 0', background: option.recommended ? '#EFF6FF' : 'transparent', borderRadius: '0.5rem' }
+                        style: {
+                            padding: '1.5rem',
+                            margin: '1rem 0',
+                            background: option.recommended ? '#EFF6FF' : '#F8FAFC',
+                            borderRadius: '0.5rem',
+                            border: option.recommended ? '2px solid #3B82F6' : '1px solid #E2E8F0'
+                        }
                     },
-                        h('h4', null, `Option ${option.id}: ${option.title}`),
-                        h('p', null, option.description)
+                        h('h4', { style: { marginBottom: '0.5rem', color: option.recommended ? '#1E40AF' : '#334155' } },
+                            `Option ${option.id}: ${option.title}`
+                        ),
+                        h('p', { style: { marginBottom: '1rem' } }, option.description),
+                        option.timeline && h('div', { style: { fontSize: '13px', color: 'var(--slate-gray)' } },
+                            `Timeline: ${option.timeline} | Cost: $${option.cost >= 1000 ? (option.cost / 1000).toFixed(0) + 'M' : option.cost + 'K'} | Risk Reduction: ${option.riskReduction}%`
+                        )
+                    )
+                ),
+
+                // NEW: Board Recommendations
+                analysis.executiveSummary.boardRecommendations && h('div', { style: { marginTop: '2.5rem' } },
+                    h('h3', null, 'VII. BOARD RECOMMENDATIONS'),
+                    h('div', {
+                        style: {
+                            background: '#FEF3C7',
+                            border: '2px solid #F59E0B',
+                            borderRadius: '0.5rem',
+                            padding: '1.5rem',
+                            marginTop: '1rem'
+                        }
+                    },
+                        h('ul', { style: { marginLeft: '1.5rem', lineHeight: '2' } },
+                            ...analysis.executiveSummary.boardRecommendations.map((rec, idx) =>
+                                h('li', { key: idx, style: { marginBottom: '0.5rem' } }, rec)
+                            )
+                        )
+                    )
+                ),
+
+                h('div', { style: { marginTop: '3rem', padding: '1rem', background: '#F8FAFC', borderRadius: '0.5rem', borderLeft: '4px solid #64748B' } },
+                    h('p', { style: { fontSize: '12px', fontStyle: 'italic', color: 'var(--slate-gray)' } },
+                        'This assessment incorporates real-time threat intelligence, ML-powered risk analysis, and compliance framework mapping. Board approval is required for Option A implementation. Document prepared for executive review and strategic planning purposes.'
                     )
                 )
             ),
+
+            // ======================================================================
+            // THREAT INTELLIGENCE VIEW
+            // ======================================================================
+            view === 'threat-intel' && analysis && analysis.threatIntelligence && h('div', null,
+                h('h2', { style: { marginBottom: '1.5rem' } }, '🎯 Threat Intelligence Dashboard'),
+                h('div', { className: 'metric-cards' },
+                    h('div', { className: 'metric-card' },
+                        h('div', { className: 'metric-label' }, 'CVE Enriched'),
+                        h('div', { className: 'metric-value' }, analysis.threatIntelligence.totalEnriched),
+                        h('div', { className: 'metric-trend' }, `of ${analysis.findings.length} findings`)
+                    ),
+                    h('div', { className: 'metric-card' },
+                        h('div', { className: 'metric-label' }, 'CISA KEV'),
+                        h('div', { className: 'metric-value', style: { color: 'var(--critical)' } }, analysis.threatIntelligence.inKEV),
+                        h('div', { className: 'metric-trend negative' }, 'Known exploited')
+                    ),
+                    h('div', { className: 'metric-card' },
+                        h('div', { className: 'metric-label' }, 'High EPSS'),
+                        h('div', { className: 'metric-value' }, analysis.threatIntelligence.highEPSS),
+                        h('div', { className: 'metric-trend' }, 'Exploitation > 10%')
+                    )
+                ),
+                h('div', { className: 'card', style: { marginTop: '2rem' } },
+                    h('div', { className: 'card-header' }, h('h3', { className: 'card-title' }, 'Top MITRE ATT&CK Tactics')),
+                    h('div', { style: { padding: '1.5rem' } },
+                        analysis.threatIntelligence.mitreTopTactics && analysis.threatIntelligence.mitreTopTactics.length > 0
+                            ? analysis.threatIntelligence.mitreTopTactics.map(({ tactic, count }) =>
+                                h('div', { key: tactic, style: { marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' } },
+                                    h('span', null, tactic),
+                                    h('span', { className: 'severity-badge medium' }, count)
+                                )
+                            )
+                            : h('p', null, 'No MITRE ATT&CK mappings')
+                    )
+                ),
+                h('div', { className: 'card', style: { marginTop: '2rem' } },
+                    h('div', { className: 'card-header' }, h('h3', { className: 'card-title' }, 'Findings with Threat Intelligence')),
+                    h('div', { className: 'table-container' },
+                        h('table', null,
+                            h('thead', null,
+                                h('tr', null,
+                                    h('th', null, 'CVE'),
+                                    h('th', null, 'Title'),
+                                    h('th', null, 'CVSS'),
+                                    h('th', null, 'EPSS'),
+                                    h('th', null, 'KEV')
+                                )
+                            ),
+                            h('tbody', null,
+                                ...analysis.findings.filter(f => f.cveId).slice(0, 20).map(f =>
+                                    h('tr', { key: f.id },
+                                        h('td', null, h('code', { style: { fontSize: '11px' } }, f.cveId)),
+                                        h('td', null, f.title.substring(0, 50)),
+                                        h('td', null, f.cvssScore || 'N/A'),
+                                        h('td', null, f.epssScore ? `${(parseFloat(f.epssScore) * 100).toFixed(1)}%` : 'N/A'),
+                                        h('td', null, f.inKEV ? h('span', { className: 'severity-badge critical' }, '❗') : 'No')
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+
+            // ML ANALYTICS VIEW
+            view === 'ml-analytics' && analysis && analysis.attackGraph && h('div', null,
+                h('h2', { style: { marginBottom: '1.5rem' } }, '🤖 ML Analytics & 3D Attack Visualization'),
+                h('div', { className: 'metric-cards' },
+                    h('div', { className: 'metric-card' },
+                        h('div', { className: 'metric-label' }, 'Nodes'),
+                        h('div', { className: 'metric-value' }, analysis.attackGraph.nodes.length)
+                    ),
+                    h('div', { className: 'metric-card' },
+                        h('div', { className: 'metric-label' }, 'Paths'),
+                        h('div', { className: 'metric-value' }, analysis.attackGraph.edges.length)
+                    ),
+                    h('div', { className: 'metric-card' },
+                        h('div', { className: 'metric-label' }, 'Critical'),
+                        h('div', { className: 'metric-value', style: { color: 'var(--critical)' } }, analysis.attackGraph.criticalPaths.length)
+                    )
+                ),
+
+                // 3D ATTACK GRAPH VISUALIZATION (Cytoscape.js)
+                h('div', { className: 'card', style: { marginTop: '2rem' } },
+                    h('div', { className: 'card-header' },
+                        h('h3', { className: 'card-title' }, '🕸️ Interactive Attack Graph (Cytoscape)')
+                    ),
+                    h('div', { style: { padding: '1rem' } },
+                        h('div', {
+                            id: 'attack-graph-viz',
+                            style: {
+                                width: '100%',
+                                height: '500px',
+                                background: '#0f172a',
+                                borderRadius: '0.5rem',
+                                position: 'relative'
+                            },
+                            ref: (el) => {
+                                if (el && typeof Visualization3D !== 'undefined' && !el.dataset.initialized) {
+                                    el.dataset.initialized = 'true';
+                                    try {
+                                        const viz = new Visualization3D();
+                                        viz.initCytoscapeGraph('attack-graph-viz');
+                                        viz.renderAttackGraph(analysis.attackGraph);
+                                        console.log('✅ Cytoscape graph initialized');
+                                    } catch (e) {
+                                        console.error('Cytoscape init error:', e);
+                                        el.innerHTML = '<div style="color: white; padding: 2rem; text-align: center;">Cytoscape.js not available. Install: npm install cytoscape</div>';
+                                    }
+                                }
+                            }
+                        }),
+                        h('p', { style: { fontSize: '12px', color: 'var(--slate-gray)', marginTop: '0.5rem' } },
+                            'Click nodes to view details. Red nodes = critical vulnerabilities. Lines show attack chains.'
+                        )
+                    )
+                ),
+
+                // 3D ATTACK SURFACE MAP (Three.js)
+                h('div', { className: 'card', style: { marginTop: '2rem' } },
+                    h('div', { className: 'card-header' },
+                        h('h3', { className: 'card-title' }, '🌐 3D Attack Surface Map (Three.js)')
+                    ),
+                    h('div', { style: { padding: '1rem' } },
+                        h('div', {
+                            id: 'attack-surface-3d',
+                            style: {
+                                width: '100%',
+                                height: '500px',
+                                background: '#0f172a',
+                                borderRadius: '0.5rem',
+                                position: 'relative'
+                            },
+                            ref: (el) => {
+                                if (el && typeof Visualization3D !== 'undefined' && typeof THREE !== 'undefined' && !el.dataset.initialized) {
+                                    el.dataset.initialized = 'true';
+                                    try {
+                                        const viz = new Visualization3D();
+                                        viz.init3DScene('attack-surface-3d');
+                                        viz.render3DAttackSurface(analysis.findings, analysis.attackGraph);
+                                        console.log('✅ Three.js 3D scene initialized');
+                                    } catch (e) {
+                                        console.error('Three.js init error:', e);
+                                        el.innerHTML = '<div style="color: white; padding: 2rem; text-align: center;">Three.js not available. Check CDN connection.</div>';
+                                    }
+                                }
+                            }
+                        }),
+                        h('p', { style: { fontSize: '12px', color: 'var(--slate-gray)', marginTop: '0.5rem' } },
+                            'Rotating 3D view of security domains. Sphere size = vulnerability count. Color = severity (red=critical, orange=high, green=good).'
+                        )
+                    )
+                ),
+
+                analysis.remediationPlan && h('div', { className: 'card', style: { marginTop: '2rem' } },
+                    h('div', { className: 'card-header' }, h('h3', { className: 'card-title' }, 'Remediation Priority')),
+                    h('div', { className: 'table-container' },
+                        h('table', null,
+                            h('thead', null, h('tr', null, h('th', null, '#'), h('th', null, 'Finding'), h('th', null, 'Effort'), h('th', null, 'ROI'))),
+                            h('tbody', null,
+                                ...analysis.remediationPlan.slice(0, 10).map((f, i) =>
+                                    h('tr', { key: f.id },
+                                        h('td', null, h('span', { className: `severity-badge ${i < 3 ? 'critical' : 'high'}` }, i + 1)),
+                                        h('td', null, f.title.substring(0, 40)),
+                                        h('td', null, f.remediationEffort || 'N/A'),
+                                        h('td', null, f.roi ? f.roi.toFixed(1) : 'N/A')
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+
+            // COMPLIANCE VIEW
+            view === 'compliance' && analysis && analysis.complianceReport && h('div', null,
+                h('h2', { style: { marginBottom: '1.5rem' } }, '📋 Compliance Analysis'),
+                h('div', { className: 'metric-cards' },
+                    ...analysis.complianceReport.frameworks.map(fw =>
+                        h('div', { key: fw.id, className: 'metric-card' },
+                            h('div', { className: 'metric-label' }, fw.name),
+                            h('div', { className: 'metric-value' }, fw.criticalFindings),
+                            h('div', { className: 'metric-trend' }, `${fw.gaps} gaps`)
+                        )
+                    )
+                ),
+                analysis.complianceGaps && h('div', { className: 'card', style: { marginTop: '2rem' } },
+                    h('div', { className: 'card-header' }, h('h3', { className: 'card-title' }, 'Compliance Gaps')),
+                    h('div', { className: 'table-container' },
+                        h('table', null,
+                            h('thead', null,
+                                h('tr', null,
+                                    h('th', null, 'Severity'),
+                                    h('th', null, 'Framework'),
+                                    h('th', null, 'Control'),
+                                    h('th', null, 'Status')
+                                )
+                            ),
+                            h('tbody', null,
+                                ...analysis.complianceGaps.slice(0, 15).map(gap =>
+                                    h('tr', { key: `${gap.frameworkId}-${gap.controlId}` },
+                                        h('td', null, h('span', { className: `severity-badge ${gap.severity}` }, gap.severity)),
+                                        h('td', null, gap.framework),
+                                        h('td', null, gap.control.substring(0, 60)),
+                                        h('td', null, h('code', { style: { fontSize: '10px' } }, gap.status))
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+
+            // EXISTING VIEWS
             view === 'findings' && analysis && h('div', null,
                 h('h2', { style: { marginBottom: '1.5rem' } }, 'Security Findings'),
                 h('div', { className: 'table-container' },
