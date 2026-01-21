@@ -474,7 +474,7 @@ MIT License - See [LICENSE](LICENSE) file
 ## 📞 Support
 
 - **Issues:** [GitHub Issues](https://github.com/bb1nfosec/sabha-devsec/issues)
-- **Email:** support@bb1nfosec.com
+- **Email:** vignesh4303@gmail.com
 - **Documentation:** [Wiki](https://github.com/bb1nfosec/sabha-devsec/wiki)
 
 ---
